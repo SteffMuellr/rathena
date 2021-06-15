@@ -574,6 +574,8 @@ struct mmo_charstatus {
 	unsigned char hotkey_rowshift;
 	unsigned char hotkey_rowshift2;
 	unsigned long title_id;
+
+	short custom_race;
 };
 
 typedef enum mail_status {
