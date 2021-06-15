@@ -8180,8 +8180,6 @@ ACMD_FUNC(me)
 	char tempmes[CHAT_SIZE_MAX];
 	nullpo_retr(-1, sd);
 
-	//tmp: Use for race-testing instead
-
 	memset(tempmes, '\0', sizeof(tempmes));
 	memset(atcmd_output, '\0', sizeof(atcmd_output));
 
@@ -8193,9 +8191,7 @@ ACMD_FUNC(me)
 		return -1;
 	}
 
-	char raceId[3];
-	sprintf(raceId, "%d\0", sd->status.custom_race++);
-	sprintf(atcmd_output, msg_txt(sd,270), raceId, tempmes);	// *%s %s*
+	sprintf(atcmd_output, msg_txt(sd, 270), sd->status.name, tempmes);	// *%s %s*
 	clif_disp_overhead(&sd->bl, atcmd_output);
 
 	return 0;

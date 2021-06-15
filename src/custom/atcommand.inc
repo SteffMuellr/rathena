@@ -17,3 +17,20 @@
 //	clif_specialeffect(&sd->bl, EF_HEARTCASTING, AREA);
 //	return 0;
 //}
+
+ACMD_FUNC(setrace)
+{
+	short race=0;
+	nullpo_retr(-1, sd);
+	race = atoi(message);
+
+
+	if (!message || !*message || race < 0 || race >= CRACE_MAX) {
+		clif_displaymessage(fd, "Invalid Race");
+		return -1;
+	}
+
+	sd->status.custom_race = race;
+	clif_displaymessage(fd, "Race set");
+	return 0;
+}
