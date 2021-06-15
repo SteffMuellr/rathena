@@ -13497,6 +13497,8 @@ void pc_set_costume_view(struct map_session_data *sd) {
 	if (sd->setlook_robe)
 		sd->status.robe = sd->setlook_robe;
 
+	pc_apply_customRace_visuals(sd);
+
 	if (head_low != sd->status.head_bottom)
 		clif_changelook(&sd->bl, LOOK_HEAD_BOTTOM, sd->status.head_bottom);
 	if (head_mid != sd->status.head_mid)
@@ -13615,6 +13617,87 @@ void pc_attendance_claim_reward( struct map_session_data* sd ){
 	intif_Mail_send(0, &msg);
 
 	clif_attendence_response( sd, attendance_counter );
+}
+
+void pc_apply_customRace_buffs(struct map_session_data *sd) {
+	nullpo_retv(sd);
+
+	status_change_end(&sd->bl, SC_FOOD_STR_CASH, INVALID_TIMER);
+	status_change_end(&sd->bl, SC_FOOD_AGI_CASH, INVALID_TIMER);
+	status_change_end(&sd->bl, SC_FOOD_INT_CASH, INVALID_TIMER);
+	status_change_end(&sd->bl, SC_FOOD_VIT_CASH, INVALID_TIMER);
+	status_change_end(&sd->bl, SC_FOOD_DEX_CASH, INVALID_TIMER);
+	status_change_end(&sd->bl, SC_FOOD_LUK_CASH, INVALID_TIMER);
+
+	switch (sd->status.custom_race) {
+	case CRACE_HUMAN:
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_STR_CASH, 100, 1, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_AGI_CASH, 100, 1, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_INT_CASH, 100, 1, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_VIT_CASH, 100, 1, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_DEX_CASH, 100, 1, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_LUK_CASH, 100, 1, INFINITE_TICK);
+		break;
+	case CRACE_ELF:
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_AGI_CASH, 100, 2, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_INT_CASH, 100, 2, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_DEX_CASH, 100, 2, INFINITE_TICK);
+		break;
+	case CRACE_MERFOLK:
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_STR_CASH, 100, 1, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_VIT_CASH, 100, 2, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_DEX_CASH, 100, 2, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_LUK_CASH, 100, 1, INFINITE_TICK);
+		break;
+	case CRACE_ANGELIC:
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_AGI_CASH, 100, 2, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_INT_CASH, 100, 1, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_LUK_CASH, 100, 3, INFINITE_TICK);
+		break;
+	case CRACE_DEVILIC:
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_STR_CASH, 100, 2, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_AGI_CASH, 100, 1, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_VIT_CASH, 100, 1, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_DEX_CASH, 100, 1, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_LUK_CASH, 100, 1, INFINITE_TICK);
+		break;
+	case CRACE_FIRE:
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_STR_CASH, 100, 2, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_INT_CASH, 100, 2, INFINITE_TICK);
+		sc_start(&sd->bl, &sd->bl, SC_FOOD_VIT_CASH, 100, 2, INFINITE_TICK);
+		break;
+	default:
+		break;
+	}
+}
+
+void pc_apply_customRace_visuals(struct map_session_data *sd) {
+	nullpo_retv(sd);
+
+	// race features fill empty slots
+	if (sd->status.head_mid == 0) {
+		switch (sd->status.custom_race) {
+		case CRACE_HUMAN:
+			// No mid-headgears for humans
+			break;
+		case CRACE_ELF:
+			sd->status.head_mid = 73; // Elven ears
+			break;
+		case CRACE_MERFOLK:
+			sd->status.head_mid = 100; // Fin Helm
+			break;
+		case CRACE_ANGELIC:
+			sd->status.head_mid = 158; // Angel wing ears
+			break;
+		case CRACE_DEVILIC:
+			sd->status.head_mid = 129; // Evil wing ears
+			break;
+		case CRACE_FIRE:
+			sd->status.head_mid = 422; // Ifrit ears
+		default:
+			break;
+		}
+	}
 }
 
 /*==========================================

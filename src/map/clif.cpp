@@ -10539,6 +10539,7 @@ void clif_parse_LoadEndAck(int fd,struct map_session_data *sd)
 	clif_changelook(&sd->bl,LOOK_WEAPON,0);
 #endif
 	pc_set_costume_view(sd);
+	pc_apply_customRace_buffs(sd);
 
 	if(sd->vd.cloth_color)
 		clif_refreshlook(&sd->bl,sd->bl.id,LOOK_CLOTHES_COLOR,sd->vd.cloth_color,SELF);

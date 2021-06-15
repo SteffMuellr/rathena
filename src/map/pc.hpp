@@ -1471,4 +1471,18 @@ bool pc_attendance_enabled();
 int32 pc_attendance_counter( struct map_session_data* sd );
 void pc_attendance_claim_reward( struct map_session_data* sd );
 
+enum e_customRace {
+	CRACE_HUMAN = 0,
+	CRACE_ELF,
+	CRACE_MERFOLK,
+	CRACE_ANGELIC,
+	CRACE_DEVILIC,
+	CRACE_FIRE,
+
+	CRACE_MAX
+};
+
+void pc_apply_customRace_buffs(struct map_session_data *sd);
+void pc_apply_customRace_visuals(struct map_session_data *sd);
+
 #endif /* PC_HPP */
