@@ -8199,6 +8199,92 @@ ACMD_FUNC(me)
 }
 
 /*==========================================
+ * @wh by Owlrrex
+ * => whispers only to players in a close radius, with a chance to send incomplete message to players further away
+ *------------------------------------------*/
+
+static int atcommand_wh_sub(struct block_list *bl, va_list ap)
+{
+	map_session_data *sender;
+	char *rawMsg;
+	int msgLen;
+	char tempmes[CHAT_SIZE_MAX];
+	struct map_session_data *sd;
+
+	int safeWhisperDistance = 3;
+	// zones are consecutive rings outside safeWhisperDistance: max-distance of this zone, chance to hear the message, percentage of correct characters
+	int whisperZones[] = { 5, 70, 80, 
+							7, 50, 60,
+							9, 30, 40,
+							11, 10, 10};
+						   
+	sender = va_arg(ap, struct map_session_data *);
+	rawMsg = va_arg(ap, char *);
+
+	nullpo_retr(-1, bl);
+	sd = BL_CAST(BL_PC, bl);
+	nullpo_retr(-1, sd);
+	nullpo_retr(-1, rawMsg);
+	nullpo_retr(-1, sender);
+	msgLen = strlen(rawMsg);
+
+	int dist = distance_bl(&sender->bl, bl);
+
+	if (sender->bl.id == bl->id) {
+		sprintf(atcmd_output, "%s whispers: %s", sd->status.name, rawMsg);
+		clif_disp_overhead_(&sender->bl, atcmd_output, SELF);
+		return 0;
+	}
+	
+	if (dist < safeWhisperDistance) {
+		sprintf(atcmd_output, "%s whispers: %s", sd->status.name, rawMsg);
+		clif_send_msg_to_target(sender, sd, atcmd_output);
+		return 0;
+	}
+
+	for (int i = 0; i < ARRAYLENGTH(whisperZones)-2; i+=3) {
+		if (dist > whisperZones[i])
+			continue; // Target is further away than current zone
+
+		int tmp = rnd() % 100;
+		if ( tmp >= whisperZones[i + 1])
+			break; // Chance determined: Target won't hear this message at all
+		memset(tempmes, '\0', sizeof(tempmes));
+		memcpy(tempmes, rawMsg, msgLen);
+
+		for (int j = 0; j < msgLen; ++j) {
+			if (tmp = (rnd() % 100) >= whisperZones[i + 2])
+				tempmes[j] = '.';
+		}
+
+		sprintf(atcmd_output, "%s whispers: %s", sd->status.name, tempmes);
+		clif_send_msg_to_target(sender, sd, atcmd_output);
+		break;
+	}
+	return 0;
+}
+
+ACMD_FUNC(wh)
+{
+	char tempmes[CHAT_SIZE_MAX];
+	nullpo_retr(-1, sd);
+
+	if (sd->sc.cant.chat || (sd->state.block_action & PCBLOCK_CHAT))
+		return -1; //no "chatting" while muted.
+
+	if (!message || !*message || sscanf(message, "%255[^\n]", tempmes) < 0) {
+		clif_displaymessage(fd, "Please enter a message (usage: @wh <message>)."); // Please enter a message (usage: @wh <message>).
+		return -1;
+	}
+
+	map_foreachinallarea(atcommand_wh_sub, sd->bl.m,
+		sd->bl.x - AREA_SIZE, sd->bl.y - AREA_SIZE,
+		sd->bl.x + AREA_SIZE, sd->bl.y + AREA_SIZE, BL_PC, sd, tempmes);
+
+	return 0;
+}
+
+/*==========================================
  * @size
  * => Resize your character sprite. [Valaris]
  *------------------------------------------*/
@@ -10595,6 +10681,7 @@ void atcommand_basecommands(void) {
 		ACMD_DEF(whereis),
 		ACMD_DEF(mapflag),
 		ACMD_DEF(me),
+		ACMD_DEF(wh),
 		ACMD_DEF(monsterignore),
 		ACMD_DEF(fakename),
 		ACMD_DEF(size),

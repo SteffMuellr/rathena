@@ -732,7 +732,6 @@ int clif_send(const void* buf, int len, struct block_list* bl, enum send_target 
 	return 0;
 }
 
-
 /// Notifies the client, that it's connection attempt was accepted.
 /// 0073 <start time>.L <position>.3B <x size>.B <y size>.B (ZC_ACCEPT_ENTER)
 /// 02eb <start time>.L <position>.3B <x size>.B <y size>.B <font>.W (ZC_ACCEPT_ENTER2)
@@ -21970,6 +21969,48 @@ void clif_parse_refineui_refine( int fd, struct map_session_data* sd ){
 		achievement_update_objective( sd, AG_ENCHANT_FAIL, 1, 1 );
 	}
 #endif
+}
+
+bool clif_send_msg_to_target(struct map_session_data *src, map_session_data *target, char *mes)
+{
+	nullpo_ret(src);
+	nullpo_ret(mes);
+
+	if (target->bl.id == src->bl.id)
+		return false;
+
+	int16 len = (int16)(strlen(mes) + 1);
+
+	if (len > CHAT_SIZE_MAX) {
+		ShowWarning("clif_GlobalMessage: Truncating too long message '%s' (len=%" PRId16 ").\n", mes, len);
+		len = CHAT_SIZE_MAX;
+	}
+
+	struct PACKET_ZC_NOTIFY_CHAT *p = (struct PACKET_ZC_NOTIFY_CHAT *)packet_buffer;
+
+	p->PacketType = HEADER_ZC_NOTIFY_CHAT;
+	p->PacketLength = (int16)(sizeof(struct PACKET_ZC_NOTIFY_CHAT) + len);
+	p->GID = src->bl.id;
+	safestrncpy(p->Message, mes, len);
+
+	// send the packet: This is code taken from clif_send_sub, which we can't use due to not having a va_list
+
+	// Don't send to disconnected clients.
+	if (!session_isActive(target->fd)) {
+		return false;
+	}
+
+	/* unless visible, hold it here */
+	if (!battle_config.update_enemy_position && clif_ally_only && !target->special_state.intravision &&
+		!target->sc.data[SC_INTRAVISION] && battle_check_target(&src->bl, &target->bl, BCT_ENEMY) > 0)
+		return false;
+
+	WFIFOHEAD(target->fd, p->PacketLength);
+
+	memcpy(WFIFOP(target->fd, 0), p, p->PacketLength);
+	WFIFOSET(target->fd, p->PacketLength);
+
+	return true;
 }
 
 /*==========================================
