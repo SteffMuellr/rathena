@@ -8287,19 +8287,20 @@ ACMD_FUNC(wh)
 ACMD_FUNC(check)
 {
 	char stat[4]; // 3 chars + nullterm
+	char desc[CHAT_SIZE_MAX];
 	nullpo_retr(-1, sd);
-	
+	desc[0] = '\0';
 
-	if (!message || !*message || sscanf(message, "%3[^\n]", stat) < 0)
+	if (!message || !*message || sscanf(message, "%3[^\n] %251[^\n]", stat, desc) < 0)
 	{
-		clif_displaymessage(fd, "Please enter a stat (usage: @check <stat>");
+		clif_displaymessage(fd, "Please enter a stat (usage: @check <stat> <optional: description>");
 		clif_displaymessage(fd, "Stats are: Str, Agi, Vit, Int, Dex, Luk, Cha");
 		return -1;
 	}
 
 	e_rpStat rpstat = pc_str_to_rpstat(stat);
 	if (rpstat == RPSTAT_INVALID) {
-		clif_displaymessage(fd, "Please enter a stat (usage: @check <stat>");
+		clif_displaymessage(fd, "Please enter a stat (usage: @check <stat> <optional: description>");
 		clif_displaymessage(fd, "Stats are: Str, Agi, Vit, Int, Dex, Luk, Cha");
 		return -1;
 	}
@@ -8308,7 +8309,11 @@ ACMD_FUNC(check)
 	int roll = (rnd() % 20) + 1;
 	char *statname = pc_rpstat_to_str(rpstat);
 
-	sprintf(atcmd_output, "%s checks %s: %d+%d [%d]", sd->status.name, statname, roll, mod, roll+mod);
+	if (strlen(desc))
+		sprintf(atcmd_output, "%s checks %s: %d+%d [%d] for %s", sd->status.name, statname, roll, mod, roll + mod, desc);
+	else
+		sprintf(atcmd_output, "%s checks %s: %d+%d [%d]", sd->status.name, statname, roll, mod, roll + mod);
+	
 	clif_disp_overhead(&sd->bl, atcmd_output);
 	return 0;
 }
