@@ -1485,4 +1485,28 @@ enum e_customRace {
 void pc_apply_customRace_buffs(struct map_session_data *sd);
 void pc_apply_customRace_visuals(struct map_session_data *sd);
 
+enum e_rpStat {
+	RPSTAT_INVALID = -1,
+	RPSTAT_STR = 0,
+	RPSTAT_AGI,
+	RPSTAT_VIT,
+	RPSTAT_INT,
+	RPSTAT_DEX,
+	RPSTAT_LUK,
+	RPSTAT_CHA
+};
+static char* rpStat_names[] = { // have to be 3 characters
+	"STR",
+	"AGI",
+	"VIT",
+	"INT",
+	"DEX",
+	"LUK",
+	"CHA",
+	"INV" // has to be the last entry
+};
+e_rpStat pc_str_to_rpstat(const char *string);
+char *pc_rpstat_to_str(e_rpStat stat);
+int pc_get_rpstat_mod(struct map_session_data *sd, e_rpStat stat);
+
 #endif /* PC_HPP */

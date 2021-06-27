@@ -13700,6 +13700,72 @@ void pc_apply_customRace_visuals(struct map_session_data *sd) {
 	}
 }
 
+e_rpStat pc_str_to_rpstat(const char *string)
+{
+	char tempstring[4];
+	nullpo_retr(RPSTAT_INVALID, string);
+
+	if (strlen(string) != 3)
+		return RPSTAT_INVALID;
+
+	for (int i = 0; i < 3; ++i) {
+		tempstring[i] = toupper(string[i]);
+	}
+	tempstring[3] = '\0';
+
+	for (int i = 0; i < ARRAYLENGTH(rpStat_names); ++i) {
+		char *tmp = rpStat_names[i];
+		if (!strcmp(tempstring, rpStat_names[i]))
+			return (e_rpStat)i;
+	}
+	return RPSTAT_INVALID;
+}
+
+char *pc_rpstat_to_str(e_rpStat stat)
+{
+	if(stat == RPSTAT_INVALID)
+		return rpStat_names[ARRAYLENGTH(rpStat_names) - 1];
+
+	return rpStat_names[(int)stat];
+}
+
+int pc_get_rpstat_mod(struct map_session_data *sd, e_rpStat stat)
+{
+	int rawStat;
+	status_data *std = status_get_status_data(&sd->bl);
+	switch (stat) {
+	case RPSTAT_STR:
+		rawStat = std->str;
+		break;
+	case RPSTAT_AGI:
+		rawStat = std->agi;
+		break;
+	case RPSTAT_VIT:
+		rawStat = std->vit;
+		break;
+	case RPSTAT_INT:
+		rawStat = std->int_;
+		break;
+	case RPSTAT_DEX:
+		rawStat = std->dex;
+		break;
+	case RPSTAT_LUK:
+		rawStat = std->luk;
+		break;
+	case RPSTAT_CHA:
+		rawStat = std->str * 2 / 3 + std->vit * 2 / 3;
+		rawStat = max(rawStat, std->int_ * 2 / 3 + std->dex * 2 / 3);
+		break;
+	default:
+		return 0;
+	}
+
+	--rawStat; // shift all brackets from 1-10, 11-20, 21-30, ... to 0-9, 10-19, ...
+	int bracket = rawStat / 10;
+
+	return bracket - 2;
+}
+
 /*==========================================
  * pc Init/Terminate
  *------------------------------------------*/

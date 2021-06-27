@@ -8284,6 +8284,35 @@ ACMD_FUNC(wh)
 	return 0;
 }
 
+ACMD_FUNC(check)
+{
+	char stat[4]; // 3 chars + nullterm
+	nullpo_retr(-1, sd);
+	
+
+	if (!message || !*message || sscanf(message, "%3[^\n]", stat) < 0)
+	{
+		clif_displaymessage(fd, "Please enter a stat (usage: @check <stat>");
+		clif_displaymessage(fd, "Stats are: Str, Agi, Vit, Int, Dex, Luk, Cha");
+		return -1;
+	}
+
+	e_rpStat rpstat = pc_str_to_rpstat(stat);
+	if (rpstat == RPSTAT_INVALID) {
+		clif_displaymessage(fd, "Please enter a stat (usage: @check <stat>");
+		clif_displaymessage(fd, "Stats are: Str, Agi, Vit, Int, Dex, Luk, Cha");
+		return -1;
+	}
+
+	int mod = pc_get_rpstat_mod(sd, rpstat);
+	int roll = (rnd() % 20) + 1;
+	char *statname = pc_rpstat_to_str(rpstat);
+
+	sprintf(atcmd_output, "%s checks %s: %d+%d [%d]", sd->status.name, statname, roll, mod, roll+mod);
+	clif_disp_overhead(&sd->bl, atcmd_output);
+	return 0;
+}
+
 /*==========================================
  * @size
  * => Resize your character sprite. [Valaris]
@@ -10682,6 +10711,7 @@ void atcommand_basecommands(void) {
 		ACMD_DEF(mapflag),
 		ACMD_DEF(me),
 		ACMD_DEF(wh),
+		ACMD_DEF(check),
 		ACMD_DEF(monsterignore),
 		ACMD_DEF(fakename),
 		ACMD_DEF(size),
