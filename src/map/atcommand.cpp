@@ -8213,10 +8213,9 @@ static int atcommand_wh_sub(struct block_list *bl, va_list ap)
 
 	int safeWhisperDistance = 3;
 	// zones are consecutive rings outside safeWhisperDistance: max-distance of this zone, chance to hear the message, percentage of correct characters
-	int whisperZones[] = { 5, 70, 80, 
-							7, 50, 60,
-							9, 30, 40,
-							11, 10, 10};
+	int whisperZones[] = { 4, 50, 70, 
+							5, 30, 40,
+							7, 10, 10};
 						   
 	sender = va_arg(ap, struct map_session_data *);
 	rawMsg = va_arg(ap, char *);
@@ -8242,18 +8241,22 @@ static int atcommand_wh_sub(struct block_list *bl, va_list ap)
 		return 0;
 	}
 
+	int perceptionMod = pc_get_rpstat_mod(sd, RPSTAT_DEX) * 2;
+	int perceptionChance;
 	for (int i = 0; i < ARRAYLENGTH(whisperZones)-2; i+=3) {
 		if (dist > whisperZones[i])
 			continue; // Target is further away than current zone
 
-		int tmp = rnd() % 100;
-		if ( tmp >= whisperZones[i + 1])
+		perceptionChance = whisperZones[i + 1] + perceptionMod;
+		if ((rnd()%100) >= perceptionChance)
 			break; // Chance determined: Target won't hear this message at all
+
 		memset(tempmes, '\0', sizeof(tempmes));
 		memcpy(tempmes, rawMsg, msgLen);
 
+		perceptionChance = whisperZones[i + 2] + perceptionMod;
 		for (int j = 0; j < msgLen; ++j) {
-			if (tmp = (rnd() % 100) >= whisperZones[i + 2])
+			if ((rnd() % 100) >= perceptionChance)
 				tempmes[j] = '.';
 		}
 
